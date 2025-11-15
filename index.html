@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KUNECT INVOICE</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        .loading {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 9999;
+        }
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 40px; height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <h2>KUNECT INVOICE</h2>
+        <p>Chargement...</p>
+    </div>
+    
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function App() {
+            const [currentView, setCurrentView] = useState('login');
+            const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+            const [showPassword, setShowPassword] = useState(false);
+            const [loginError, setLoginError] = useState('');
+            const [activeTab, setActiveTab] = useState('dashboard');
+
+            // Cacher l'écran de chargement
+            useEffect(() => {
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                }, 1000);
+            }, []);
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                if (loginForm.email === 'admin@kunect.com' && loginForm.password === 'admin123') {
+                    setCurrentView('main');
+                    setLoginError('');
+                } else {
+                    setLoginError('Email ou mot de passe incorrect');
+                }
+            };
+
+            const handleLogout = () => {
+                setCurrentView('login');
+                setLoginForm({ email: '', password: '' });
+            };
+
+            // Données de démonstration
+            const clients = [
+                { id: 1, name: 'Entreprise Alpha', email: 'contact@alpha.sn', phone: '+221 77 123 4567' },
+                { id: 2, name: 'Société Beta', email: 'info@beta.ci', phone: '+225 01 23 45 67' }
+            ];
+
+            const documents = [
+                { id: 1, type: 'Facture', number: 'FAC-2024-001', client: 'Entreprise Alpha', date: '2024-11-10', amount: 150000, status: 'Payé' },
+                { id: 2, type: 'Devis', number: 'DEV-2024-001', client: 'Société Beta', date: '2024-11-15', amount: 75000, status: 'En attente' }
+            ];
+
+            if (currentView === 'login') {
+                return React.createElement('div', {
+                    className: "min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4"
+                },
+                    React.createElement('div', { className: "bg-white rounded-xl shadow-xl p-8 w-full max-w-md" }, [
+                        React.createElement('div', { className: "text-center mb-8", key: 'header' }, [
+                            React.createElement('div', {
+                                className: "mx-auto bg-blue-600 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-4",
+                                key: 'icon'
+                            }, '💰'),
+                            React.createElement('h2', {
+                                className: "text-3xl font-bold text-gray-900 mb-2",
+                                key: 'title'
+                            }, 'KUNECT INVOICE'),
+                            React.createElement('p', {
+                                className: "text-gray-600",
+                                key: 'subtitle'
+                            }, 'Solution de gestion commerciale')
+                        ]),
+                        loginError && React.createElement('div', {
+                            className: "bg-red-50 text-red-700 p-3 rounded-lg text-sm mb-4",
+                            key: 'error'
+                        }, loginError),
+                        React.createElement('form', { onSubmit: handleLogin, className: "space-y-6", key: 'form' }, [
+                            React.createElement('div', { key: 'email' }, [
+                                React.createElement('label', {
+                                    className: "block text-sm font-medium text-gray-700 mb-2",
+                                    key: 'label1'
+                                }, 'Email'),
+                                React.createElement('input', {
+                                    type: "email",
+                                    required: true,
+                                    className: "block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500",
+                                    placeholder: "admin@kunect.com",
+                                    value: loginForm.email,
+                                    onChange: (e) => setLoginForm({...loginForm, email: e.target.value}),
+                                    key: 'input1'
+                                })
+                            ]),
+                            React.createElement('div', { key: 'password' }, [
+                                React.createElement('label', {
+                                    className: "block text-sm font-medium text-gray-700 mb-2",
+                                    key: 'label2'
+                                }, 'Mot de passe'),
+                                React.createElement('div', { className: "relative", key: 'input2' }, [
+                                    React.createElement('input', {
+                                        type: showPassword ? "text" : "password",
+                                        required: true,
+                                        className: "block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500",
+                                        placeholder: "admin123",
+                                        value: loginForm.password,
+                                        onChange: (e) => setLoginForm({...loginForm, password: e.target.value}),
+                                        key: 'passwordInput'
+                                    }),
+                                    React.createElement('button', {
+                                        type: "button",
+                                        className: "absolute right-3 top-1/2 transform -translate-y-1/2",
+                                        onClick: () => setShowPassword(!showPassword),
+                                        key: 'eyeButton'
+                                    }, showPassword ? '👁️' : '👁️‍🗨️')
+                                ])
+                            ]),
+                            React.createElement('button', {
+                                type: "submit",
+                                className: "w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 font-medium",
+                                key: 'submit'
+                            }, 'Se connecter')
+                        ]),
+                        React.createElement('div', {
+                            className: "mt-6 text-center text-sm text-gray-600",
+                            key: 'demo'
+                        }, [
+                            React.createElement('p', { key: 'text' }, 'Compte démo:'),
+                            React.createElement('p', { className: "font-medium", key: 'credentials' }, 'admin@kunect.com / admin123')
+                        ])
+                    ])
+                );
+            }
+
+            return React.createElement('div', { className: "min-h-screen bg-gray-50" }, [
+                // Header
+                React.createElement('header', {
+                    className: "bg-white shadow-sm border-b",
+                    key: 'header'
+                },
+                    React.createElement('div', { className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" },
+                        React.createElement('div', { className: "flex justify-between items-center h-16" }, [
+                            React.createElement('div', { className: "flex items-center space-x-3", key: 'logo' }, [
+                                React.createElement('div', {
+                                    className: "bg-blue-600 p-2 rounded-lg",
+                                    key: 'icon'
+                                }, '💰'),
+                                React.createElement('div', { key: 'text' }, [
+                                    React.createElement('h1', {
+                                        className: "text-xl font-bold text-gray-900",
+                                        key: 'title'
+                                    }, 'KUNECT INVOICE'),
+                                    React.createElement('p', {
+                                        className: "text-sm text-gray-500",
+                                        key: 'subtitle'
+                                    }, 'Solution de gestion commerciale')
+                                ])
+                            ]),
+                            React.createElement('button', {
+                                onClick: handleLogout,
+                                className: "text-sm text-blue-600 hover:text-blue-800 font-medium",
+                                key: 'logout'
+                            }, 'Déconnexion')
+                        ])
+                    )
+                ),
+
+                // Navigation
+                React.createElement('nav', {
+                    className: "bg-white border-b",
+                    key: 'nav'
+                },
+                    React.createElement('div', { className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" },
+                        React.createElement('div', { className: "flex space-x-8" },
+                            ['dashboard', 'documents', 'clients', 'settings'].map(tab =>
+                                React.createElement('button', {
+                                    key: tab,
+                                    onClick: () => setActiveTab(tab),
+                                    className: `py-4 px-1 border-b-2 font-medium text-sm ${
+                                        activeTab === tab
+                                            ? 'border-blue-500 text-blue-600'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    }`
+                                }, 
+                                    tab === 'dashboard' ? '📊 Tableau de bord' :
+                                    tab === 'documents' ? '📄 Documents' :
+                                    tab === 'clients' ? '👥 Clients' :
+                                    '⚙️ Paramètres'
+                                )
+                            )
+                        )
+                    )
+                ),
+
+                // Contenu principal
+                React.createElement('main', {
+                    className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8",
+                    key: 'main'
+                },
+                    activeTab === 'dashboard' && React.createElement('div', { className: "space-y-6" }, [
+                        React.createElement('div', {
+                            className: "grid grid-cols-1 md:grid-cols-3 gap-6",
+                            key: 'stats'
+                        }, [
+                            React.createElement('div', { className: "bg-white rounded-lg shadow-sm p-6", key: 'revenue' }, [
+                                React.createElement('div', { className: "flex items-center" }, [
+                                    React.createElement('div', {
+                                        className: "p-2 bg-blue-100 rounded-lg",
+                                        key: 'icon'
+                                    }, '💰'),
+                                    React.createElement('div', { className: "ml-4", key: 'text' }, [
+                                        React.createElement('p', {
+                                            className: "text-sm font-medium text-gray-600",
+                                            key: 'label'
+                                        }, 'Chiffre d\'affaires'),
+                                        React.createElement('p', {
+                                            className: "text-2xl font-bold text-gray-900",
+                                            key: 'value'
+                                        }, '225,000 FCFA')
+                                    ])
+                                ])
+                            ]),
+                            React.createElement('div', { className: "bg-white rounded-lg shadow-sm p-6", key: 'documents' }, [
+                                React.createElement('div', { className: "flex items-center" }, [
+                                    React.createElement('div', {
+                                        className: "p-2 bg-green-100 rounded-lg",
+                                        key: 'icon'
+                                    }, '📄'),
+                                    React.createElement('div', { className: "ml-4", key: 'text' }, [
+                                        React.createElement('p', {
+                                            className: "text-sm font-medium text-gray-600",
+                                            key: 'label'
+                                        }, 'Documents'),
+                                        React.createElement('p', {
+                                            className: "text-2xl font-bold text-gray-900",
+                                            key: 'value'
+                                        }, documents.length)
+                                    ])
+                                ])
+                            ]),
+                            React.createElement('div', { className: "bg-white rounded-lg shadow-sm p-6", key: 'clients' }, [
+                                React.createElement('div', { className: "flex items-center" }, [
+                                    React.createElement('div', {
+                                        className: "p-2 bg-purple-100 rounded-lg",
+                                        key: 'icon'
+                                    }, '👥'),
+                                    React.createElement('div', { className: "ml-4", key: 'text' }, [
+                                        React.createElement('p', {
+                                            className: "text-sm font-medium text-gray-600",
+                                            key: 'label'
+                                        }, 'Clients'),
+                                        React.createElement('p', {
+                                            className: "text-2xl font-bold text-gray-900",
+                                            key: 'value'
+                                        }, clients.length)
+                                    ])
+                                ])
+                            ])
+                        ]),
+                        React.createElement('div', {
+                            className: "bg-white rounded-lg shadow-sm p-6",
+                            key: 'welcome'
+                        }, [
+                            React.createElement('h3', {
+                                className: "text-lg font-semibold text-gray-900 mb-4",
+                                key: 'title'
+                            }, 'Bienvenue dans KUNECT INVOICE'),
+                            React.createElement('p', {
+                                className: "text-gray-600 mb-6",
+                                key: 'message'
+                            }, 'Votre application de facturation professionnelle est opérationnelle !'),
+                            React.createElement('div', {
+                                className: "grid grid-cols-1 md:grid-cols-2 gap-4",
+                                key: 'features'
+                            }, [
+                                React.createElement('div', {
+                                    className: "p-4 border border-blue-200 rounded-lg bg-blue-50",
+                                    key: 'invoices'
+                                }, [
+                                    React.createElement('div', { className: "text-2xl mb-2", key: 'icon' }, '📄'),
+                                    React.createElement('p', {
+                                        className: "font-medium text-blue-900",
+                                        key: 'text'
+                                    }, 'Gestion des factures et devis')
+                                ]),
+                                React.createElement('div', {
+                                    className: "p-4 border border-green-200 rounded-lg bg-green-50",
+                                    key: 'clients'
+                                }, [
+                                    React.createElement('div', { className: "text-2xl mb-2", key: 'icon' }, '👥'),
+                                    React.createElement('p', {
+                                        className: "font-medium text-green-900",
+                                        key: 'text'
+                                    }, 'Gestion de la clientèle')
+                                ])
+                            ])
+                        ])
+                    ]),
+
+                    activeTab === 'documents' && React.createElement('div', { className: "bg-white rounded-lg shadow-sm p-6", key: 'documents-tab' }, [
+                        React.createElement('h2', {
+                            className: "text-lg font-semibold text-gray-900 mb-4",
+                            key: 'title'
+                        }, 'Documents'),
+                        React.createElement('div', { className: "space-y-4", key: 'list' },
+                            documents.map(doc =>
+                                React.createElement('div', {
+                                    className: "flex items-center justify-between p-4 border rounded-lg",
+                                    key: doc.id
+                                }, [
+                                    React.createElement('div', { className: "flex items-center space-x-3", key: 'info' }, [
+                                        React.createElement('div', { className: "text-2xl", key: 'icon' }, 
+                                            doc.type === 'Facture' ? '🧾' : '📋'
+                                        ),
+                                        React.createElement('div', { key: 'details' }, [
+                                            React.createElement('p', {
+                                                className: "font-medium text-gray-900",
+                                                key: 'number'
+                                            }, doc.number),
+                                            React.createElement('p', {
+                                                className: "text-sm text-gray-500",
+                                                key: 'client'
+                                            }, doc.client)
+                                        ])
+                                    ]),
+                                    React.createElement('div', { className: "text-right", key: 'amount' }, [
+                                        React.createElement('p', {
+                                            className: "font-medium text-gray-900",
+                                            key: 'value'
+                                        }, `${doc.amount.toLocaleString()} FCFA`),
+                                        React.createElement('span', {
+                                            className: `inline-block px-2 py-1 text-xs rounded-full ${
+                                                doc.status === 'Payé' 
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : 'bg-yellow-100 text-yellow-800'
+                                            }`,
+                                            key: 'status'
+                                        }, doc.status)
+                                    ])
+                                ])
+                            )
+                        )
+                    ]),
+
+                    activeTab === 'clients' && React.createElement('div', { className: "bg-white rounded-lg shadow-sm p-6", key: 'clients-tab' }, [
+                        React.createElement('h2', {
+                            className: "text-lg font-semibold text-gray-900 mb-4",
+                            key: 'title'
+                        }, 'Clients'),
+                        React.createElement('div', { className: "space-y-4", key: 'list' },
+                            clients.map(client =>
+                                React.createElement('div', {
+                                    className: "p-4 border rounded-lg",
+                                    key: client.id
+                                }, [
+                                    React.createElement('p', {
+                                        className: "font-medium text-gray-900",
+                                        key: 'name'
+                                    }, client.name),
+                                    React.createElement('p', {
+                                        className: "text-sm text-gray-600",
+                                        key: 'email'
+                                    }, client.email),
+                                    React.createElement('p', {
+                                        className: "text-sm text-gray-500",
+                                        key: 'phone'
+                                    }, client.phone)
+                                ])
+                            )
+                        )
+                    ]),
+
+                    activeTab === 'settings' && React.createElement('div', { className: "bg-white rounded-lg shadow-sm p-6", key: 'settings-tab' }, [
+                        React.createElement('h2', {
+                            className: "text-lg font-semibold text-gray-900 mb-4",
+                            key: 'title'
+                        }, 'Paramètres de l\'entreprise'),
+                        React.createElement('div', { className: "space-y-4", key: 'form' }, [
+                            React.createElement('div', { key: 'name' }, [
+                                React.createElement('label', {
+                                    className: "block text-sm font-medium text-gray-700 mb-1",
+                                    key: 'label1'
+                                }, 'Nom de l\'entreprise'),
+                                React.createElement('input', {
+                                    type: "text",
+                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md",
+                                    defaultValue: "KUNECT INVOICE",
+                                    key: 'input1'
+                                })
+                            ]),
+                            React.createElement('div', { key: 'email' }, [
+                                React.createElement('label', {
+                                    className: "block text-sm font-medium text-gray-700 mb-1",
+                                    key: 'label2'
+                                }, 'Email'),
+                                React.createElement('input', {
+                                    type: "email",
+                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md",
+                                    defaultValue: "contact@kunect.com",
+                                    key: 'input2'
+                                })
+                            ]),
+                            React.createElement('div', { key: 'phone' }, [
+                                React.createElement('label', {
+                                    className: "block text-sm font-medium text-gray-700 mb-1",
+                                    key: 'label3'
+                                }, 'Téléphone'),
+                                React.createElement('input', {
+                                    type: "text",
+                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md",
+                                    defaultValue: "+221 77 888 9999",
+                                    key: 'input3'
+                                })
+                            ])
+                        ])
+                    ])
+                )
+            ]);
+        }
+
+        ReactDOM.render(React.createElement(App), document.getElementById('root'));
+    </script>
+</body>
+</html>
+
