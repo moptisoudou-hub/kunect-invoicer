@@ -3,457 +3,1741 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KUNECT INVOICE</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>FacturioPro - Gestion Complète de Facturation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; }
-        .loading {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--gray-100);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
-            z-index: 9999;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            position: relative;
         }
-        .spinner {
-            border: 4px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top: 4px solid white;
-            width: 40px; height: 40px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+        
+        header h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        
+        .user-info {
+            position: absolute;
+            top: 1rem;
+            right: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--secondary);
+        }
+        
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .user-info {
+                position: static;
+                justify-content: center;
+                margin-bottom: 1rem;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--gray-200);
+            padding-bottom: 0.75rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .item-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .item-row input, .item-row select {
+            padding: 0.5rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 6px;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #059669;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #d97706;
+        }
+        
+        .btn-info {
+            background-color: var(--info);
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .item-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .preview-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-top: 2rem;
+        }
+        
+        .preview-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .preview-title {
+            font-size: 2rem;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .preview-subtitle {
+            color: var(--secondary);
+            font-size: 1.1rem;
+        }
+        
+        .document-content {
+            background: white;
+            padding: 2rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        .company-logo {
+            max-width: 150px;
+            max-height: 80px;
+            margin-bottom: 1rem;
+        }
+        
+        .document-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+        
+        .company-info h2 {
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .client-info h3 {
+            margin-bottom: 0.5rem;
+            color: var(--secondary);
+        }
+        
+        .client-id {
+            background-color: var(--primary);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+        
+        .document-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+        }
+        
+        .document-table th,
+        .document-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .document-table th {
+            background-color: var(--gray-100);
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        
+        .total-row {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .document-footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: var(--secondary);
+            font-style: italic;
+        }
+        
+        .barcode-container {
+            text-align: center;
+            margin: 2rem 0;
+            padding: 1rem;
+            background-color: var(--gray-100);
+            border-radius: 8px;
+        }
+        
+        .barcode {
+            height: 50px;
+            margin: 0 auto;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .product-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+        
+        .product-item {
+            padding: 0.75rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            background-color: var(--gray-100);
+        }
+        
+        .product-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.25rem;
+        }
+        
+        .product-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .search-input {
+            margin-bottom: 1rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: var(--secondary);
+            font-size: 0.875rem;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        th {
+            background-color: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background-color: var(--gray-100);
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .status-paid {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+        
+        .status-pending {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+        
+        .status-draft {
+            background-color: rgba(100, 116, 139, 0.2);
+            color: var(--secondary);
+        }
+        
+        .status-cancelled {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+        
+        /* Authentication forms */
+        .auth-form {
+            max-width: 400px;
+            margin: 2rem auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+        
+        .auth-form h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary-dark);
+        }
+        
+        /* Dashboard navigation */
+        .dashboard-nav {
+            margin-bottom: 1rem;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Transform buttons */
+        .transform-btn {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
         }
     </style>
 </head>
 <body>
-    <div id="loading" class="loading">
-        <div class="spinner"></div>
-        <h2>KUNECT INVOICE</h2>
-        <p>Chargement...</p>
+    <div class="container">
+        <!-- Authentication Section -->
+        <div id="authSection">
+            <div class="auth-form">
+                <h2>Connexion / Inscription</h2>
+                <div class="form-group">
+                    <label for="authEmail">Email</label>
+                    <input type="email" id="authEmail" class="form-control" placeholder="votre@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="authPassword">Mot de passe</label>
+                    <input type="password" id="authPassword" class="form-control" placeholder="Mot de passe">
+                </div>
+                <div class="form-group">
+                    <label for="authCompany">Nom de l'entreprise</label>
+                    <input type="text" id="authCompany" class="form-control" placeholder="Nom de votre entreprise">
+                </div>
+                <div class="btn-group" style="justify-content: center;">
+                    <button class="btn btn-primary" onclick="login()">Se connecter</button>
+                    <button class="btn btn-success" onclick="register()">S'inscrire</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Application (hidden initially) -->
+        <div id="appSection" class="hidden">
+            <header>
+                <div class="user-info">
+                    <span id="currentUser">Entreprise</span>
+                    <button class="logout-btn" onclick="logout()">Déconnexion</button>
+                </div>
+                <h1>FacturioPro</h1>
+            </header>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('dashboard')">Tableau de bord</button>
+                <button class="tab-btn" onclick="switchTab('facturation')">Facturation</button>
+                <button class="tab-btn" onclick="switchTab('produits')">Gestion Produits</button>
+                <button class="tab-btn" onclick="switchTab('clients')">Gestion Clients</button>
+                <button class="tab-btn" onclick="switchTab('entreprise')">Mon Entreprise</button>
+            </div>
+            
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalClients">0</div>
+                        <div class="stat-label">Clients</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalProducts">0</div>
+                        <div class="stat-label">Produits</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalDocuments">0</div>
+                        <div class="stat-label">Documents</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalRevenue">0,00 €</div>
+                        <div class="stat-label">Chiffre d'affaires</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2 class="card-title">Factures par statut</h2>
+                    <div class="btn-group">
+                        <button class="btn btn-info" onclick="filterDocuments('facture', 'all')">Toutes</button>
+                        <button class="btn btn-warning" onclick="filterDocuments('facture', 'pending')">En attente</button>
+                        <button class="btn btn-success" onclick="filterDocuments('facture', 'paid')">Payées</button>
+                        <button class="btn btn-danger" onclick="filterDocuments('facture', 'cancelled')">Annulées</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="dashboardDocumentsTable">
+                            <thead>
+                                <tr>
+                                    <th>N° Document</th>
+                                    <th>Type</th>
+                                    <th>Client</th>
+                                    <th>Date</th>
+                                    <th>Montant</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboardDocumentsTableBody">
+                                <!-- Documents will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Facturation Tab -->
+            <div id="facturation" class="tab-content">
+                <div class="main-content">
+                    <div class="card">
+                        <h2 class="card-title">Informations Client</h2>
+                        <div class="form-group">
+                            <label for="companyName">Société</label>
+                            <input type="text" id="companyName" class="form-control" placeholder="Nom de la société">
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Adresse</label>
+                            <input type="text" id="address" class="form-control" placeholder="Adresse complète">
+                        </div>
+                        <div class="form-group">
+                            <label for="city">Ville</label>
+                            <input type="text" id="city" class="form-control" placeholder="Ville">
+                        </div>
+                        <div class="form-group">
+                            <label for="country">Pays</label>
+                            <input type="text" id="country" class="form-control" placeholder="Pays">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" class="form-control" placeholder="contact@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Téléphone</label>
+                            <input type="tel" id="phone" class="form-control" placeholder="+33 1 23 45 67 89">
+                        </div>
+                        <div class="form-group">
+                            <label for="clientCurrency">Devise</label>
+                            <select id="clientCurrency" class="form-control">
+                                <option value="EUR">€ Euro</option>
+                                <option value="USD">$ Dollar US</option>
+                                <option value="XOF">FCFA Franc CFA</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h2 class="card-title">Articles</h2>
+                        <div class="form-group">
+                            <label>Ajouter depuis la liste des produits</label>
+                            <select id="productSelect" class="form-control" onchange="addProductFromList()">
+                                <option value="">Sélectionner un produit</option>
+                            </select>
+                        </div>
+                        
+                        <div id="itemsContainer">
+                            <div class="item-row">
+                                <input type="text" class="form-control" placeholder="Description">
+                                <input type="number" class="form-control" placeholder="Qté" min="1" value="1">
+                                <input type="number" class="form-control" placeholder="Prix unitaire" min="0" step="0.01">
+                                <select class="form-control">
+                                    <option value="EUR">€</option>
+                                    <option value="USD">$</option>
+                                    <option value="XOF">FCFA</option>
+                                </select>
+                                <input type="number" class="form-control" placeholder="TVA (%)" min="0" max="100" value="20">
+                                <input type="number" class="form-control" placeholder="Total" readonly>
+                                <div class="item-actions">
+                                    <button class="btn btn-primary" onclick="addItem()">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label for="documentType">Type de document</label>
+                            <select id="documentType" class="form-control">
+                                <option value="facture">Facture</option>
+                                <option value="devis">Devis</option>
+                                <option value="bon">Bon de livraison</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="documentCurrency">Devise du document</label>
+                            <select id="documentCurrency" class="form-control">
+                                <option value="EUR">€ Euro</option>
+                                <option value="USD">$ Dollar US</option>
+                                <option value="XOF">FCFA Franc CFA</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-success" onclick="generatePreview()">Générer l'aperçu</button>
+                    </div>
+                </div>
+                
+                <div id="previewSection" class="hidden">
+                    <div class="preview-container">
+                        <div class="preview-header">
+                            <h2 class="preview-title" id="previewTitle">Facture</h2>
+                            <p class="preview-subtitle">N° <span id="invoiceNumber">INV-2025-001</span></p>
+                        </div>
+                        
+                        <div class="document-content">
+                            <div class="document-header">
+                                <div class="company-info">
+                                    <img id="previewCompanyLogo" class="company-logo" src="" alt="Logo">
+                                    <h2 id="previewCompanyName">Votre Entreprise</h2>
+                                    <p id="previewCompanyAddress">Adresse</p>
+                                    <p id="previewCompanyCity">Ville, Pays</p>
+                                    <p id="previewCompanyPhone">Téléphone</p>
+                                    <p id="previewCompanyEmail">Email</p>
+                                </div>
+                                
+                                <div class="client-info">
+                                    <h3>Client:</h3>
+                                    <p id="previewClientName">Nom du client</p>
+                                    <p id="previewAddress">Adresse</p>
+                                    <p id="previewCity">Ville</p>
+                                    <p id="previewCountry">Pays</p>
+                                    <p id="previewEmail">Email</p>
+                                    <p id="previewPhone">Téléphone</p>
+                                    <div class="client-id" id="previewClientId">ID: CLT-2025-001</div>
+                                </div>
+                            </div>
+                            
+                            <table class="document-table">
+                                <thead>
+                                    <tr>
+                                        <th>Description</th>
+                                        <th>Qté</th>
+                                        <th>Prix HT</th>
+                                        <th>Devise</th>
+                                        <th>TVA</th>
+                                        <th>Total HT</th>
+                                        <th>Total TTC</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="previewItems">
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="5" style="text-align: right;">Total HT:</td>
+                                        <td id="previewTotalHT">0,00 €</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="5" style="text-align: right;">TVA:</td>
+                                        <td id="previewTotalTVA">0,00 €</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr class="total-row">
+                                        <td colspan="5" style="text-align: right;">Total TTC:</td>
+                                        <td colspan="2" id="previewTotal">0,00 €</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            
+                            <div class="barcode-container">
+                                <svg id="barcode" class="barcode"></svg>
+                            </div>
+                            
+                            <div class="document-footer">
+                                <p>Merci pour votre confiance!</p>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="generatePDF()">Télécharger PDF</button>
+                            <button class="btn btn-warning" onclick="saveAsDraft()">Enregistrer comme brouillon</button>
+                            <button class="btn btn-danger" onclick="resetForm()">Nouveau document</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Produits Tab -->
+            <div id="produits" class="tab-content">
+                <div class="card">
+                    <h2 class="card-title">Gestion des Produits</h2>
+                    <div class="form-group">
+                        <label for="productName">Nom du produit</label>
+                        <input type="text" id="productName" class="form-control" placeholder="Nom du produit">
+                    </div>
+                    <div class="form-group">
+                        <label for="productPrice">Prix de base (Euro)</label>
+                        <input type="number" id="productPrice" class="form-control" placeholder="Prix en Euro" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="productTVA">Taux TVA (%)</label>
+                        <input type="number" id="productTVA" class="form-control" placeholder="Taux TVA" value="20" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="productDescription">Description</label>
+                        <input type="text" id="productDescription" class="form-control" placeholder="Description du produit">
+                    </div>
+                    <button class="btn btn-success" onclick="addProduct()">Ajouter le produit</button>
+                </div>
+                
+                <div class="card" style="margin-top: 2rem;">
+                    <h2 class="card-title">Liste des Produits</h2>
+                    <div class="search-input">
+                        <input type="text" id="productSearch" class="form-control" placeholder="Rechercher un produit..." oninput="filterProducts()">
+                    </div>
+                    <div class="product-list" id="productList">
+                        <!-- Products will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Clients Tab -->
+            <div id="clients" class="tab-content">
+                <div class="card">
+                    <h2 class="card-title">Liste des Clients</h2>
+                    <div class="table-container">
+                        <table id="clientsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID Client</th>
+                                    <th>Société</th>
+                                    <th>Email</th>
+                                    <th>Ville</th>
+                                    <th>Pays</th>
+                                    <th>Devise</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientsTableBody">
+                                <!-- Clients will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Entreprise Tab -->
+            <div id="entreprise" class="tab-content">
+                <div class="card">
+                    <h2 class="card-title">Informations de l'Entreprise</h2>
+                    <div class="form-group">
+                        <label for="companyLogo">Logo (URL)</label>
+                        <input type="text" id="companyLogo" class="form-control" placeholder="URL du logo">
+                    </div>
+                    <div class="form-group">
+                        <label for="companyNameField">Nom de l'entreprise</label>
+                        <input type="text" id="companyNameField" class="form-control" placeholder="Nom de votre entreprise">
+                    </div>
+                    <div class="form-group">
+                        <label for="companyAddress">Adresse</label>
+                        <input type="text" id="companyAddress" class="form-control" placeholder="Adresse complète">
+                    </div>
+                    <div class="form-group">
+                        <label for="companyCity">Ville</label>
+                        <input type="text" id="companyCity" class="form-control" placeholder="Ville">
+                    </div>
+                    <div class="form-group">
+                        <label for="companyCountry">Pays</label>
+                        <input type="text" id="companyCountry" class="form-control" placeholder="Pays">
+                    </div>
+                    <div class="form-group">
+                        <label for="companyPhone">Téléphone</label>
+                        <input type="tel" id="companyPhone" class="form-control" placeholder="Téléphone">
+                    </div>
+                    <div class="form-group">
+                        <label for="companyEmail">Email</label>
+                        <input type="email" id="companyEmail" class="form-control" placeholder="Email">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveCompanyInfo()">Enregistrer les informations</button>
+                </div>
+            </div>
+        </div>
     </div>
-    
-    <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-
-        function App() {
-            const [currentView, setCurrentView] = useState('login');
-            const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-            const [showPassword, setShowPassword] = useState(false);
-            const [loginError, setLoginError] = useState('');
-            const [activeTab, setActiveTab] = useState('dashboard');
-
-            // Cacher l'écran de chargement
-            useEffect(() => {
-                setTimeout(() => {
-                    document.getElementById('loading').style.display = 'none';
-                }, 1000);
-            }, []);
-
-            const handleLogin = (e) => {
-                e.preventDefault();
-                if (loginForm.email === 'admin@kunect.com' && loginForm.password === 'admin123') {
-                    setCurrentView('main');
-                    setLoginError('');
-                } else {
-                    setLoginError('Email ou mot de passe incorrect');
-                }
-            };
-
-            const handleLogout = () => {
-                setCurrentView('login');
-                setLoginForm({ email: '', password: '' });
-            };
-
-            // Données de démonstration
-            const clients = [
-                { id: 1, name: 'Entreprise Alpha', email: 'contact@alpha.sn', phone: '+221 77 123 4567' },
-                { id: 2, name: 'Société Beta', email: 'info@beta.ci', phone: '+225 01 23 45 67' }
-            ];
-
-            const documents = [
-                { id: 1, type: 'Facture', number: 'FAC-2024-001', client: 'Entreprise Alpha', date: '2024-11-10', amount: 150000, status: 'Payé' },
-                { id: 2, type: 'Devis', number: 'DEV-2024-001', client: 'Société Beta', date: '2024-11-15', amount: 75000, status: 'En attente' }
-            ];
-
-            if (currentView === 'login') {
-                return React.createElement('div', {
-                    className: "min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4"
-                },
-                    React.createElement('div', { className: "bg-white rounded-xl shadow-xl p-8 w-full max-w-md" }, [
-                        React.createElement('div', { className: "text-center mb-8", key: 'header' }, [
-                            React.createElement('div', {
-                                className: "mx-auto bg-blue-600 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-4",
-                                key: 'icon'
-                            }, '💰'),
-                            React.createElement('h2', {
-                                className: "text-3xl font-bold text-gray-900 mb-2",
-                                key: 'title'
-                            }, 'KUNECT INVOICE'),
-                            React.createElement('p', {
-                                className: "text-gray-600",
-                                key: 'subtitle'
-                            }, 'Solution de gestion commerciale')
-                        ]),
-                        loginError && React.createElement('div', {
-                            className: "bg-red-50 text-red-700 p-3 rounded-lg text-sm mb-4",
-                            key: 'error'
-                        }, loginError),
-                        React.createElement('form', { onSubmit: handleLogin, className: "space-y-6", key: 'form' }, [
-                            React.createElement('div', { key: 'email' }, [
-                                React.createElement('label', {
-                                    className: "block text-sm font-medium text-gray-700 mb-2",
-                                    key: 'label1'
-                                }, 'Email'),
-                                React.createElement('input', {
-                                    type: "email",
-                                    required: true,
-                                    className: "block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500",
-                                    placeholder: "admin@kunect.com",
-                                    value: loginForm.email,
-                                    onChange: (e) => setLoginForm({...loginForm, email: e.target.value}),
-                                    key: 'input1'
-                                })
-                            ]),
-                            React.createElement('div', { key: 'password' }, [
-                                React.createElement('label', {
-                                    className: "block text-sm font-medium text-gray-700 mb-2",
-                                    key: 'label2'
-                                }, 'Mot de passe'),
-                                React.createElement('div', { className: "relative", key: 'input2' }, [
-                                    React.createElement('input', {
-                                        type: showPassword ? "text" : "password",
-                                        required: true,
-                                        className: "block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500",
-                                        placeholder: "admin123",
-                                        value: loginForm.password,
-                                        onChange: (e) => setLoginForm({...loginForm, password: e.target.value}),
-                                        key: 'passwordInput'
-                                    }),
-                                    React.createElement('button', {
-                                        type: "button",
-                                        className: "absolute right-3 top-1/2 transform -translate-y-1/2",
-                                        onClick: () => setShowPassword(!showPassword),
-                                        key: 'eyeButton'
-                                    }, showPassword ? '👁️' : '👁️‍🗨️')
-                                ])
-                            ]),
-                            React.createElement('button', {
-                                type: "submit",
-                                className: "w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 font-medium",
-                                key: 'submit'
-                            }, 'Se connecter')
-                        ]),
-                        React.createElement('div', {
-                            className: "mt-6 text-center text-sm text-gray-600",
-                            key: 'demo'
-                        }, [
-                            React.createElement('p', { key: 'text' }, 'Compte démo:'),
-                            React.createElement('p', { className: "font-medium", key: 'credentials' }, 'admin@kunect.com / admin123')
-                        ])
-                    ])
-                );
+    <script>
+        // Current user
+        let currentUser = null;
+        let currentCompanyId = null;
+        
+        // Currency conversion rates (relative to Euro)
+        const CURRENCY_RATES = {
+            EUR: 1,
+            USD: 1.08,
+            XOF: 655.957
+        };
+        
+        const CURRENCY_SYMBOLS = {
+            EUR: '€',
+            USD: '$',
+            XOF: 'FCFA'
+        };
+        
+        const CURRENCY_NAMES = {
+            EUR: 'Euro',
+            USD: 'Dollar US',
+            XOF: 'Franc CFA'
+        };
+        
+        const DOCUMENT_TYPES = {
+            facture: 'Facture',
+            devis: 'Devis',
+            bon: 'Bon de livraison'
+        };
+        
+        const STATUS_LABELS = {
+            draft: 'Brouillon',
+            pending: 'En attente',
+            paid: 'Payée',
+            cancelled: 'Annulée'
+        };
+        
+        // Initialize data
+        function init() {
+            // Check if user is logged in
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                currentCompanyId = currentUser.companyId;
+                document.getElementById('currentUser').textContent = currentUser.companyName;
+                document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('appSection').classList.remove('hidden');
+                loadCompanyInfo();
+                loadAllData();
+                switchTab('dashboard');
             }
-
-            return React.createElement('div', { className: "min-h-screen bg-gray-50" }, [
-                // Header
-                React.createElement('header', {
-                    className: "bg-white shadow-sm border-b",
-                    key: 'header'
-                },
-                    React.createElement('div', { className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" },
-                        React.createElement('div', { className: "flex justify-between items-center h-16" }, [
-                            React.createElement('div', { className: "flex items-center space-x-3", key: 'logo' }, [
-                                React.createElement('div', {
-                                    className: "bg-blue-600 p-2 rounded-lg",
-                                    key: 'icon'
-                                }, '💰'),
-                                React.createElement('div', { key: 'text' }, [
-                                    React.createElement('h1', {
-                                        className: "text-xl font-bold text-gray-900",
-                                        key: 'title'
-                                    }, 'KUNECT INVOICE'),
-                                    React.createElement('p', {
-                                        className: "text-sm text-gray-500",
-                                        key: 'subtitle'
-                                    }, 'Solution de gestion commerciale')
-                                ])
-                            ]),
-                            React.createElement('button', {
-                                onClick: handleLogout,
-                                className: "text-sm text-blue-600 hover:text-blue-800 font-medium",
-                                key: 'logout'
-                            }, 'Déconnexion')
-                        ])
-                    )
-                ),
-
-                // Navigation
-                React.createElement('nav', {
-                    className: "bg-white border-b",
-                    key: 'nav'
-                },
-                    React.createElement('div', { className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" },
-                        React.createElement('div', { className: "flex space-x-8" },
-                            ['dashboard', 'documents', 'clients', 'settings'].map(tab =>
-                                React.createElement('button', {
-                                    key: tab,
-                                    onClick: () => setActiveTab(tab),
-                                    className: `py-4 px-1 border-b-2 font-medium text-sm ${
-                                        activeTab === tab
-                                            ? 'border-blue-500 text-blue-600'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700'
-                                    }`
-                                }, 
-                                    tab === 'dashboard' ? '📊 Tableau de bord' :
-                                    tab === 'documents' ? '📄 Documents' :
-                                    tab === 'clients' ? '👥 Clients' :
-                                    '⚙️ Paramètres'
-                                )
-                            )
-                        )
-                    )
-                ),
-
-                // Contenu principal
-                React.createElement('main', {
-                    className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8",
-                    key: 'main'
-                },
-                    activeTab === 'dashboard' && React.createElement('div', { className: "space-y-6" }, [
-                        React.createElement('div', {
-                            className: "grid grid-cols-1 md:grid-cols-3 gap-6",
-                            key: 'stats'
-                        }, [
-                            React.createElement('div', { className: "bg-white rounded-lg shadow-sm p-6", key: 'revenue' }, [
-                                React.createElement('div', { className: "flex items-center" }, [
-                                    React.createElement('div', {
-                                        className: "p-2 bg-blue-100 rounded-lg",
-                                        key: 'icon'
-                                    }, '💰'),
-                                    React.createElement('div', { className: "ml-4", key: 'text' }, [
-                                        React.createElement('p', {
-                                            className: "text-sm font-medium text-gray-600",
-                                            key: 'label'
-                                        }, 'Chiffre d\'affaires'),
-                                        React.createElement('p', {
-                                            className: "text-2xl font-bold text-gray-900",
-                                            key: 'value'
-                                        }, '225,000 FCFA')
-                                    ])
-                                ])
-                            ]),
-                            React.createElement('div', { className: "bg-white rounded-lg shadow-sm p-6", key: 'documents' }, [
-                                React.createElement('div', { className: "flex items-center" }, [
-                                    React.createElement('div', {
-                                        className: "p-2 bg-green-100 rounded-lg",
-                                        key: 'icon'
-                                    }, '📄'),
-                                    React.createElement('div', { className: "ml-4", key: 'text' }, [
-                                        React.createElement('p', {
-                                            className: "text-sm font-medium text-gray-600",
-                                            key: 'label'
-                                        }, 'Documents'),
-                                        React.createElement('p', {
-                                            className: "text-2xl font-bold text-gray-900",
-                                            key: 'value'
-                                        }, documents.length)
-                                    ])
-                                ])
-                            ]),
-                            React.createElement('div', { className: "bg-white rounded-lg shadow-sm p-6", key: 'clients' }, [
-                                React.createElement('div', { className: "flex items-center" }, [
-                                    React.createElement('div', {
-                                        className: "p-2 bg-purple-100 rounded-lg",
-                                        key: 'icon'
-                                    }, '👥'),
-                                    React.createElement('div', { className: "ml-4", key: 'text' }, [
-                                        React.createElement('p', {
-                                            className: "text-sm font-medium text-gray-600",
-                                            key: 'label'
-                                        }, 'Clients'),
-                                        React.createElement('p', {
-                                            className: "text-2xl font-bold text-gray-900",
-                                            key: 'value'
-                                        }, clients.length)
-                                    ])
-                                ])
-                            ])
-                        ]),
-                        React.createElement('div', {
-                            className: "bg-white rounded-lg shadow-sm p-6",
-                            key: 'welcome'
-                        }, [
-                            React.createElement('h3', {
-                                className: "text-lg font-semibold text-gray-900 mb-4",
-                                key: 'title'
-                            }, 'Bienvenue dans KUNECT INVOICE'),
-                            React.createElement('p', {
-                                className: "text-gray-600 mb-6",
-                                key: 'message'
-                            }, 'Votre application de facturation professionnelle est opérationnelle !'),
-                            React.createElement('div', {
-                                className: "grid grid-cols-1 md:grid-cols-2 gap-4",
-                                key: 'features'
-                            }, [
-                                React.createElement('div', {
-                                    className: "p-4 border border-blue-200 rounded-lg bg-blue-50",
-                                    key: 'invoices'
-                                }, [
-                                    React.createElement('div', { className: "text-2xl mb-2", key: 'icon' }, '📄'),
-                                    React.createElement('p', {
-                                        className: "font-medium text-blue-900",
-                                        key: 'text'
-                                    }, 'Gestion des factures et devis')
-                                ]),
-                                React.createElement('div', {
-                                    className: "p-4 border border-green-200 rounded-lg bg-green-50",
-                                    key: 'clients'
-                                }, [
-                                    React.createElement('div', { className: "text-2xl mb-2", key: 'icon' }, '👥'),
-                                    React.createElement('p', {
-                                        className: "font-medium text-green-900",
-                                        key: 'text'
-                                    }, 'Gestion de la clientèle')
-                                ])
-                            ])
-                        ])
-                    ]),
-
-                    activeTab === 'documents' && React.createElement('div', { className: "bg-white rounded-lg shadow-sm p-6", key: 'documents-tab' }, [
-                        React.createElement('h2', {
-                            className: "text-lg font-semibold text-gray-900 mb-4",
-                            key: 'title'
-                        }, 'Documents'),
-                        React.createElement('div', { className: "space-y-4", key: 'list' },
-                            documents.map(doc =>
-                                React.createElement('div', {
-                                    className: "flex items-center justify-between p-4 border rounded-lg",
-                                    key: doc.id
-                                }, [
-                                    React.createElement('div', { className: "flex items-center space-x-3", key: 'info' }, [
-                                        React.createElement('div', { className: "text-2xl", key: 'icon' }, 
-                                            doc.type === 'Facture' ? '🧾' : '📋'
-                                        ),
-                                        React.createElement('div', { key: 'details' }, [
-                                            React.createElement('p', {
-                                                className: "font-medium text-gray-900",
-                                                key: 'number'
-                                            }, doc.number),
-                                            React.createElement('p', {
-                                                className: "text-sm text-gray-500",
-                                                key: 'client'
-                                            }, doc.client)
-                                        ])
-                                    ]),
-                                    React.createElement('div', { className: "text-right", key: 'amount' }, [
-                                        React.createElement('p', {
-                                            className: "font-medium text-gray-900",
-                                            key: 'value'
-                                        }, `${doc.amount.toLocaleString()} FCFA`),
-                                        React.createElement('span', {
-                                            className: `inline-block px-2 py-1 text-xs rounded-full ${
-                                                doc.status === 'Payé' 
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-yellow-100 text-yellow-800'
-                                            }`,
-                                            key: 'status'
-                                        }, doc.status)
-                                    ])
-                                ])
-                            )
-                        )
-                    ]),
-
-                    activeTab === 'clients' && React.createElement('div', { className: "bg-white rounded-lg shadow-sm p-6", key: 'clients-tab' }, [
-                        React.createElement('h2', {
-                            className: "text-lg font-semibold text-gray-900 mb-4",
-                            key: 'title'
-                        }, 'Clients'),
-                        React.createElement('div', { className: "space-y-4", key: 'list' },
-                            clients.map(client =>
-                                React.createElement('div', {
-                                    className: "p-4 border rounded-lg",
-                                    key: client.id
-                                }, [
-                                    React.createElement('p', {
-                                        className: "font-medium text-gray-900",
-                                        key: 'name'
-                                    }, client.name),
-                                    React.createElement('p', {
-                                        className: "text-sm text-gray-600",
-                                        key: 'email'
-                                    }, client.email),
-                                    React.createElement('p', {
-                                        className: "text-sm text-gray-500",
-                                        key: 'phone'
-                                    }, client.phone)
-                                ])
-                            )
-                        )
-                    ]),
-
-                    activeTab === 'settings' && React.createElement('div', { className: "bg-white rounded-lg shadow-sm p-6", key: 'settings-tab' }, [
-                        React.createElement('h2', {
-                            className: "text-lg font-semibold text-gray-900 mb-4",
-                            key: 'title'
-                        }, 'Paramètres de l\'entreprise'),
-                        React.createElement('div', { className: "space-y-4", key: 'form' }, [
-                            React.createElement('div', { key: 'name' }, [
-                                React.createElement('label', {
-                                    className: "block text-sm font-medium text-gray-700 mb-1",
-                                    key: 'label1'
-                                }, 'Nom de l\'entreprise'),
-                                React.createElement('input', {
-                                    type: "text",
-                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md",
-                                    defaultValue: "KUNECT INVOICE",
-                                    key: 'input1'
-                                })
-                            ]),
-                            React.createElement('div', { key: 'email' }, [
-                                React.createElement('label', {
-                                    className: "block text-sm font-medium text-gray-700 mb-1",
-                                    key: 'label2'
-                                }, 'Email'),
-                                React.createElement('input', {
-                                    type: "email",
-                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md",
-                                    defaultValue: "contact@kunect.com",
-                                    key: 'input2'
-                                })
-                            ]),
-                            React.createElement('div', { key: 'phone' }, [
-                                React.createElement('label', {
-                                    className: "block text-sm font-medium text-gray-700 mb-1",
-                                    key: 'label3'
-                                }, 'Téléphone'),
-                                React.createElement('input', {
-                                    type: "text",
-                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md",
-                                    defaultValue: "+221 77 888 9999",
-                                    key: 'input3'
-                                })
-                            ])
-                        ])
-                    ])
-                )
-            ]);
         }
-
-        ReactDOM.render(React.createElement(App), document.getElementById('root'));
+        
+        // Authentication
+        function register() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            const companyName = document.getElementById('authCompany').value;
+            
+            if (!email || !password || !companyName) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+            
+            // Check if user already exists
+            const existingUsers = JSON.parse(localStorage.getItem('users')) || [];
+            const existingUser = existingUsers.find(u => u.email === email);
+            if (existingUser) {
+                alert('Un compte existe déjà avec cet email');
+                return;
+            }
+            
+            const companyId = generateUniqueId('COMP');
+            const newUser = {
+                id: generateUniqueId('USER'),
+                email: email,
+                password: password, // In real app, hash this!
+                companyName: companyName,
+                companyId: companyId,
+                createdAt: new Date().toISOString()
+            };
+            
+            existingUsers.push(newUser);
+            localStorage.setItem('users', JSON.stringify(existingUsers));
+            
+            // Initialize company data
+            const companies = JSON.parse(localStorage.getItem('companies')) || [];
+            companies.push({
+                id: companyId,
+                name: companyName,
+                logo: '',
+                address: '',
+                city: '',
+                country: '',
+                phone: '',
+                email: email,
+                userId: newUser.id,
+                createdAt: new Date().toISOString()
+            });
+            localStorage.setItem('companies', JSON.stringify(companies));
+            
+            alert('Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
+        }
+        
+        function login() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            
+            if (!email || !password) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+            
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.email === email && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                currentCompanyId = user.companyId;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                document.getElementById('currentUser').textContent = user.companyName;
+                document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('appSection').classList.remove('hidden');
+                loadCompanyInfo();
+                loadAllData();
+                switchTab('dashboard');
+            } else {
+                alert('Email ou mot de passe incorrect');
+            }
+        }
+        
+        function logout() {
+            currentUser = null;
+            currentCompanyId = null;
+            localStorage.removeItem('currentUser');
+            document.getElementById('appSection').classList.add('hidden');
+            document.getElementById('authSection').classList.remove('hidden');
+            document.getElementById('authEmail').value = '';
+            document.getElementById('authPassword').value = '';
+            document.getElementById('authCompany').value = '';
+        }
+        
+        // Load company info
+        function loadCompanyInfo() {
+            const companies = JSON.parse(localStorage.getItem('companies')) || [];
+            const company = companies.find(c => c.id === currentCompanyId);
+            if (company) {
+                document.getElementById('companyLogo').value = company.logo || '';
+                document.getElementById('companyNameField').value = company.name || '';
+                document.getElementById('companyAddress').value = company.address || '';
+                document.getElementById('companyCity').value = company.city || '';
+                document.getElementById('companyCountry').value = company.country || '';
+                document.getElementById('companyPhone').value = company.phone || '';
+                document.getElementById('companyEmail').value = company.email || '';
+            }
+        }
+        
+        function saveCompanyInfo() {
+            const companies = JSON.parse(localStorage.getItem('companies')) || [];
+            const companyIndex = companies.findIndex(c => c.id === currentCompanyId);
+            
+            if (companyIndex !== -1) {
+                companies[companyIndex] = {
+                    ...companies[companyIndex],
+                    logo: document.getElementById('companyLogo').value,
+                    name: document.getElementById('companyNameField').value,
+                    address: document.getElementById('companyAddress').value,
+                    city: document.getElementById('companyCity').value,
+                    country: document.getElementById('companyCountry').value,
+                    phone: document.getElementById('companyPhone').value,
+                    email: document.getElementById('companyEmail').value
+                };
+                localStorage.setItem('companies', JSON.stringify(companies));
+                alert('Informations de l\'entreprise mises à jour avec succès !');
+            }
+        }
+        
+        // Get current company
+        function getCurrentCompany() {
+            const companies = JSON.parse(localStorage.getItem('companies')) || [];
+            return companies.find(c => c.id === currentCompanyId) || null;
+        }
+        
+        // Generate unique ID
+        function generateUniqueId(prefix) {
+            const timestamp = Date.now().toString(36);
+            const random = Math.random().toString(36).substr(2, 5);
+            return `${prefix}-${timestamp}${random}`.toUpperCase();
+        }
+        
+        // Format currency
+        function formatCurrency(amount, currency) {
+            if (currency === 'XOF') {
+                return Math.round(amount).toLocaleString('fr-FR') + ' ' + CURRENCY_SYMBOLS[currency];
+            }
+            return amount.toLocaleString('fr-FR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }) + ' ' + CURRENCY_SYMBOLS[currency];
+        }
+        
+        // Convert amount between currencies
+        function convertCurrency(amount, fromCurrency, toCurrency) {
+            if (fromCurrency === toCurrency) return amount;
+            const amountInEUR = amount / CURRENCY_RATES[fromCurrency];
+            return amountInEUR * CURRENCY_RATES[toCurrency];
+        }
+        
+        // Load all data for current company
+        function loadAllData() {
+            // Load clients for current company
+            let allClients = JSON.parse(localStorage.getItem('clients')) || [];
+            clients = allClients.filter(c => c.companyId === currentCompanyId);
+            
+            // Load products for current company
+            let allProducts = JSON.parse(localStorage.getItem('products')) || [];
+            products = allProducts.filter(p => p.companyId === currentCompanyId);
+            
+            // Load documents for current company
+            let allDocuments = JSON.parse(localStorage.getItem('documents')) || [];
+            documents = allDocuments.filter(d => d.companyId === currentCompanyId);
+            
+            loadProducts();
+            loadClients();
+            loadDocuments();
+            updateStats();
+        }
+        
+        // Store data globally (scoped to current company)
+        let clients = [];
+        let products = [];
+        let documents = [];
+        
+        // Tab switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(tabId).classList.add('active');
+            document.querySelector(`.tab-btn[onclick="switchTab('${tabId}')"]`).classList.add('active');
+            
+            if (tabId === 'dashboard') {
+                loadDashboardDocuments('facture', 'all');
+            }
+        }
+        
+        // Filter documents for dashboard
+        function filterDocuments(type, status) {
+            loadDashboardDocuments(type, status);
+        }
+        
+        function loadDashboardDocuments(type, status) {
+            const tbody = document.getElementById('dashboardDocumentsTableBody');
+            tbody.innerHTML = '';
+            
+            let filteredDocuments = documents.filter(doc => doc.type === type);
+            
+            if (status !== 'all') {
+                filteredDocuments = filteredDocuments.filter(doc => doc.status === status);
+            }
+            
+            // Sort by date (newest first)
+            filteredDocuments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            filteredDocuments.forEach(doc => {
+                const row = document.createElement('tr');
+                const date = new Date(doc.createdAt);
+                const formattedDate = date.toLocaleDateString('fr-FR');
+                const statusClass = `status-${doc.status}`;
+                const statusText = STATUS_LABELS[doc.status];
+                
+                row.innerHTML = `
+                    <td>${doc.id}</td>
+                    <td>${DOCUMENT_TYPES[doc.type]}</td>
+                    <td>${doc.companyName}</td>
+                    <td>${formattedDate}</td>
+                    <td>${formatCurrency(doc.total, doc.currency)}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="btn btn-info transform-btn" onclick="transformDocument('${doc.id}', 'facture')">Facture</button>
+                        <button class="btn btn-warning transform-btn" onclick="transformDocument('${doc.id}', 'devis')">Devis</button>
+                        <button class="btn btn-primary transform-btn" onclick="transformDocument('${doc.id}', 'bon')">Bon liv.</button>
+                        <button class="btn btn-success transform-btn" onclick="markAsPaid('${doc.id}')">Payé</button>
+                        <button class="btn btn-danger transform-btn" onclick="cancelDocument('${doc.id}')">Annuler</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Transform document
+        function transformDocument(originalDocId, newType) {
+            const originalDoc = documents.find(d => d.id === originalDocId);
+            if (!originalDoc) return;
+            
+            const newDoc = {
+                ...originalDoc,
+                id: generateDocumentId(newType),
+                type: newType,
+                status: newType === 'devis' ? 'draft' : 'pending',
+                createdAt: new Date().toISOString()
+            };
+            
+            documents.push(newDoc);
+            localStorage.setItem('documents', JSON.stringify([...JSON.parse(localStorage.getItem('documents')) || [], newDoc]));
+            loadAllData();
+            alert(`Document transformé en ${DOCUMENT_TYPES[newType]} !`);
+        }
+        
+        function generateDocumentId(type) {
+            const prefix = type === 'facture' ? 'INV' : type === 'devis' ? 'QUOTE' : 'DEL';
+            return `${prefix}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+        }
+        
+        // Mark document as paid
+        function markAsPaid(docId) {
+            const docIndex = documents.findIndex(d => d.id === docId);
+            if (docIndex !== -1) {
+                documents[docIndex].status = 'paid';
+                documents[docIndex].paidAt = new Date().toISOString();
+                localStorage.setItem('documents', JSON.stringify(documents));
+                loadAllData();
+                alert('Document marqué comme payé !');
+            }
+        }
+        
+        // Cancel document
+        function cancelDocument(docId) {
+            if (confirm('Êtes-vous sûr de vouloir annuler ce document ?')) {
+                const docIndex = documents.findIndex(d => d.id === docId);
+                if (docIndex !== -1) {
+                    documents[docIndex].status = 'cancelled';
+                    localStorage.setItem('documents', JSON.stringify(documents));
+                    loadAllData();
+                    alert('Document annulé !');
+                }
+            }
+        }
+        
+        // Client management
+        function getOrCreateClientId(companyName, email) {
+            const existingClient = clients.find(client => 
+                client.companyName === companyName && client.email === email
+            );
+            
+            if (existingClient) {
+                return existingClient.id;
+            }
+            
+            const clientCurrency = document.getElementById('clientCurrency').value;
+            const newClientId = generateUniqueId('CLT');
+            const newClient = {
+                id: newClientId,
+                companyId: currentCompanyId,
+                companyName: companyName,
+                email: email,
+                address: document.getElementById('address').value,
+                city: document.getElementById('city').value,
+                country: document.getElementById('country').value,
+                phone: document.getElementById('phone').value,
+                currency: clientCurrency,
+                createdAt: new Date().toISOString()
+            };
+            
+            clients.push(newClient);
+            // Save to global storage
+            const allClients = JSON.parse(localStorage.getItem('clients')) || [];
+            allClients.push(newClient);
+            localStorage.setItem('clients', JSON.stringify(allClients));
+            loadClients();
+            
+            return newClientId;
+        }
+        
+        function loadClients() {
+            const tbody = document.getElementById('clientsTableBody');
+            tbody.innerHTML = '';
+            
+            clients.forEach(client => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${client.id}</td>
+                    <td>${client.companyName}</td>
+                    <td>${client.email}</td>
+                    <td>${client.city}</td>
+                    <td>${client.country}</td>
+                    <td>${CURRENCY_NAMES[client.currency]}</td>
+                    <td>
+                        <button class="btn btn-primary" style="padding: 4px 8px; font-size: 0.75rem;" 
+                                onclick="selectClient('${client.id}')">Sélectionner</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function selectClient(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            if (client) {
+                document.getElementById('companyName').value = client.companyName;
+                document.getElementById('address').value = client.address;
+                document.getElementById('city').value = client.city;
+                document.getElementById('country').value = client.country;
+                document.getElementById('email').value = client.email;
+                document.getElementById('phone').value = client.phone;
+                document.getElementById('clientCurrency').value = client.currency;
+                switchTab('facturation');
+            }
+        }
+        
+        // Product management
+        function addProduct() {
+            const name = document.getElementById('productName').value;
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const tva = parseFloat(document.getElementById('productTVA').value);
+            const description = document.getElementById('productDescription').value;
+            
+            if (!name || isNaN(price)) {
+                alert('Veuillez remplir tous les champs obligatoires');
+                return;
+            }
+            
+            const newProduct = {
+                id: generateUniqueId('PRD'),
+                companyId: currentCompanyId,
+                name: name,
+                price: price,
+                tva: tva || 20,
+                description: description,
+                createdAt: new Date().toISOString()
+            };
+            
+            products.push(newProduct);
+            // Save to global storage
+            const allProducts = JSON.parse(localStorage.getItem('products')) || [];
+            allProducts.push(newProduct);
+            localStorage.setItem('products', JSON.stringify(allProducts));
+            
+            // Clear form
+            document.getElementById('productName').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productTVA').value = '20';
+            document.getElementById('productDescription').value = '';
+            
+            loadProducts();
+        }
+        
+        function loadProducts() {
+            const select = document.getElementById('productSelect');
+            select.innerHTML = '<option value="">Sélectionner un produit</option>';
+            
+            const productList = document.getElementById('productList');
+            productList.innerHTML = '';
+            
+            products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = `${product.name} - ${product.price.toFixed(2)} €`;
+                select.appendChild(option);
+                
+                const productDiv = document.createElement('div');
+                productDiv.className = 'product-item';
+                productDiv.innerHTML = `
+                    <div class="product-item-header">
+                        <strong>${product.name}</strong>
+                        <div class="product-actions">
+                            <button class="btn btn-primary" style="padding: 4px 8px; font-size: 0.75rem;" 
+                                    onclick="editProduct('${product.id}')">Modifier</button>
+                            <button class="btn btn-danger" style="padding: 4px 8px; font-size: 0.75rem;" 
+                                    onclick="deleteProduct('${product.id}')">Supprimer</button>
+                        </div>
+                    </div>
+                    <div>Prix de base: ${product.price.toFixed(2)} €</div>
+                    <div>TVA: ${product.tva}%</div>
+                    <div>${product.description || ''}</div>
+                `;
+                productList.appendChild(productDiv);
+            });
+        }
+        
+        function addProductFromList() {
+            const productId = document.getElementById('productSelect').value;
+            if (!productId) return;
+            
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                const container = document.getElementById('itemsContainer');
+                const clientCurrency = document.getElementById('clientCurrency').value;
+                const convertedPrice = convertCurrency(product.price, 'EUR', clientCurrency);
+                
+                const newRow = document.createElement('div');
+                newRow.className = 'item-row';
+                newRow.innerHTML = `
+                    <input type="text" class="form-control" value="${product.name}" readonly>
+                    <input type="number" class="form-control" placeholder="Qté" min="1" value="1">
+                    <input type="number" class="form-control" value="${convertedPrice.toFixed(2)}" step="0.01">
+                    <select class="form-control">
+                        <option value="EUR"${clientCurrency === 'EUR' ? ' selected' : ''}>€</option>
+                        <option value="USD"${clientCurrency === 'USD' ? ' selected' : ''}>$</option>
+                        <option value="XOF"${clientCurrency === 'XOF' ? ' selected' : ''}>FCFA</option>
+                    </select>
+                    <input type="number" class="form-control" value="${product.tva}" readonly>
+                    <input type="number" class="form-control" placeholder="Total" readonly>
+                    <div class="item-actions">
+                        <button class="btn btn-danger" onclick="removeItem(this)">-</button>
+                    </div>
+                `;
+                container.appendChild(newRow);
+                
+                const quantityInput = newRow.querySelector('input[type="number"]:nth-child(2)');
+                quantityInput.addEventListener('input', updateRowTotal);
+                const currencySelect = newRow.querySelector('select');
+                currencySelect.addEventListener('change', function() {
+                    updateRowCurrency(this);
+                });
+                
+                document.getElementById('productSelect').value = '';
+            }
+        }
+        
+        function editProduct(productId) {
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                document.getElementById('productName').value = product.name;
+                document.getElementById('productPrice').value = product.price;
+                document.getElementById('productTVA').value = product.tva;
+                document.getElementById('productDescription').value = product.description;
+                
+                products = products.filter(p => p.id !== productId);
+                localStorage.setItem('products', JSON.stringify(products.filter(p => p.companyId === currentCompanyId)));
+                loadProducts();
+            }
+        }
+        
+        function deleteProduct(productId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
+                products = products.filter(p => p.id !== productId);
+                localStorage.setItem('products', JSON.stringify(products.filter(p => p.companyId === currentCompanyId)));
+                loadProducts();
+            }
+        }
+        
+        function filterProducts() {
+            const searchTerm = document.getElementById('productSearch').value.toLowerCase();
+            const productItems = document.querySelectorAll('.product-item');
+            
+            productItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+        
+        // Document management
+        function loadDocuments() {
+            // This is handled by loadAllData()
+        }
+        
+        function updateStats() {
+            document.getElementById('totalClients').textContent = clients.length;
+            document.getElementById('totalProducts').textContent = products.length;
+            document.getElementById('totalDocuments').textContent = documents.length;
+            
+            const totalRevenueEUR = documents
+                .filter(doc => doc.status === 'paid')
+                .reduce((sum, doc) => {
+                    const amountInEUR = doc.total / CURRENCY_RATES[doc.currency];
+                    return sum + amountInEUR;
+                }, 0);
+            document.getElementById('totalRevenue').textContent = totalRevenueEUR.toFixed(2) + ' €';
+        }
+        
+        // Facturation functions
+        function addItem() {
+            const container = document.getElementById('itemsContainer');
+            const newRow = document.createElement('div');
+            newRow.className = 'item-row';
+            newRow.innerHTML = `
+                <input type="text" class="form-control" placeholder="Description">
+                <input type="number" class="form-control" placeholder="Qté" min="1" value="1">
+                <input type="number" class="form-control" placeholder="Prix unitaire" min="0" step="0.01">
+                <select class="form-control">
+                    <option value="EUR">€</option>
+                    <option value="USD">$</option>
+                    <option value="XOF">FCFA</option>
+                </select>
+                <input type="number" class="form-control" placeholder="TVA (%)" min="0" max="100" value="20">
+                <input type="number" class="form-control" placeholder="Total" readonly>
+                <div class="item-actions">
+                    <button class="btn btn-danger" onclick="removeItem(this)">-</button>
+                </div>
+            `;
+            container.appendChild(newRow);
+            
+            const inputs = newRow.querySelectorAll('input');
+            const currencySelect = newRow.querySelector('select');
+            inputs[1].addEventListener('input', updateRowTotal);
+            inputs[2].addEventListener('input', updateRowTotal);
+            inputs[4].addEventListener('input', updateRowTotal);
+            currencySelect.addEventListener('change', function() {
+                updateRowCurrency(this);
+            });
+        }
+        
+        function removeItem(button) {
+            const row = button.closest('.item-row');
+            row.remove();
+        }
+        
+        function updateRowCurrency(selectElement) {
+            const row = selectElement.closest('.item-row');
+            updateRowTotal.call(row.querySelector('input[type="number"]:nth-child(2)'));
+        }
+        
+        function updateRowTotal() {
+            const row = this.closest('.item-row');
+            const quantity = parseFloat(row.querySelector('input[type="number"]:nth-child(2)').value) || 0;
+            const price = parseFloat(row.querySelector('input[type="number"]:nth-child(3)').value) || 0;
+            const currency = row.querySelector('select').value;
+            const tva = parseFloat(row.querySelector('input[type="number"]:nth-child(5)').value) || 0;
+            const totalHT = quantity * price;
+            const totalTTC = totalHT * (1 + tva / 100);
+            row.querySelector('input[type="number"]:nth-child(6)').value = totalTTC.toFixed(2);
+        }
+        
+        function generatePreview() {
+            const companyName = document.getElementById('companyName').value || 'Nom du client';
+            const address = document.getElementById('address').value || 'Adresse';
+            const city = document.getElementById('city').value || 'Ville';
+            const country = document.getElementById('country').value || 'Pays';
+            const email = document.getElementById('email').value || 'Email';
+            const phone = document.getElementById('phone').value || 'Téléphone';
+            const clientCurrency = document.getElementById('clientCurrency').value;
+            
+            const clientId = getOrCreateClientId(companyName, email);
+            
+            // Update preview client info
+            document.getElementById('previewClientName').textContent = companyName;
+            document.getElementById('previewAddress').textContent = address;
+            document.getElementById('previewCity').textContent = city;
+            document.getElementById('previewCountry').textContent = country;
+            document.getElementById('previewEmail').textContent = email;
+            document.getElementById('previewPhone').textContent = phone;
+            document.getElementById('previewClientId').textContent = `ID: ${clientId}`;
+            
+            // Get company info for preview
+            const company = getCurrentCompany();
+            if (company) {
+                document.getElementById('previewCompanyName').textContent = company.name;
+                document.getElementById('previewCompanyAddress').textContent = company.address;
+                document.getElementById('previewCompanyCity').textContent = `${company.city}, ${company.country}`;
+                document.getElementById('previewCompanyPhone').textContent = company.phone;
+                document.getElementById('previewCompanyEmail').textContent = company.email;
+                const logoImg = document.getElementById('previewCompanyLogo');
+                if (company.logo) {
+                    logoImg.src = company.logo;
+                    logoImg.style.display = 'block';
+                } else {
+                    logoImg.style.display = 'none';
+                }
+            }
+            
+            const documentType = document.getElementById('documentType').value;
+            const documentCurrency = document.getElementById('documentCurrency').value;
+            const title = DOCUMENT_TYPES[documentType];
+            const fullDocumentId = generateDocumentId(documentType);
+            
+            document.getElementById('previewTitle').textContent = title;
+            document.getElementById('invoiceNumber').textContent = fullDocumentId;
+            
+            // Calculate totals
+            const items = document.querySelectorAll('.item-row');
+            const previewItems = document.getElementById('previewItems');
+            previewItems.innerHTML = '';
+            
+            let totalHT = 0;
+            let totalTVA = 0;
+            let totalTTC = 0;
+            
+            items.forEach(item => {
+                const description = item.querySelector('input[type="text"]').value || 'Description';
+                const quantity = parseFloat(item.querySelector('input[type="number"]:nth-child(2)').value) || 0;
+                const price = parseFloat(item.querySelector('input[type="number"]:nth-child(3)').value) || 0;
+                const itemCurrency = item.querySelector('select').value;
+                const tvaRate = parseFloat(item.querySelector('input[type="number"]:nth-child(5)').value) || 0;
+                const lineTotalHT = quantity * price;
+                const lineTVA = lineTotalHT * (tvaRate / 100);
+                const lineTotalTTC = lineTotalHT + lineTVA;
+                
+                const convertedTotalHT = convertCurrency(lineTotalHT, itemCurrency, documentCurrency);
+                const convertedTVA = convertCurrency(lineTVA, itemCurrency, documentCurrency);
+                const convertedTotalTTC = convertCurrency(lineTotalTTC, itemCurrency, documentCurrency);
+                
+                totalHT += convertedTotalHT;
+                totalTVA += convertedTVA;
+                totalTTC += convertedTotalTTC;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${description}</td>
+                    <td>${quantity}</td>
+                    <td>${formatCurrency(convertedTotalHT / quantity, documentCurrency)}</td>
+                    <td>${CURRENCY_SYMBOLS[itemCurrency]}</td>
+                    <td>${tvaRate}%</td>
+                    <td>${formatCurrency(convertedTotalHT, documentCurrency)}</td>
+                    <td>${formatCurrency(convertedTotalTTC, documentCurrency)}</td>
+                `;
+                previewItems.appendChild(row);
+            });
+            
+            document.getElementById('previewTotalHT').textContent = formatCurrency(totalHT, documentCurrency);
+            document.getElementById('previewTotalTVA').textContent = formatCurrency(totalTVA, documentCurrency);
+            document.getElementById('previewTotal').textContent = formatCurrency(totalTTC, documentCurrency);
+            
+            // Generate barcode
+            JsBarcode("#barcode", fullDocumentId, {
+                format: "CODE128",
+                displayValue: true,
+                fontSize: 16,
+                textAlign: "center",
+                height: 50,
+                lineColor: "#000",
+                width: 2
+            });
+            
+            document.getElementById('previewSection').classList.remove('hidden');
+            document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function saveAsDraft() {
+            alert('Document enregistré comme brouillon!');
+        }
+        
+        // PDF generation
+        const { jsPDF } = window.jspdf;
+        
+        function generatePDF() {
+            const element = document.querySelector('.document-content');
+            
+            html2canvas(element).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgWidth = 210;
+                const pageHeight = 295;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+                
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                const docType = document.getElementById('documentType').value;
+                let filename = '';
+                switch(docType) {
+                    case 'facture': filename = 'facture.pdf'; break;
+                    case 'devis': filename = 'devis.pdf'; break;
+                    case 'bon': filename = 'bon_livraison.pdf'; break;
+                }
+                
+                pdf.save(filename);
+                
+                // Save document
+                const documentId = document.getElementById('invoiceNumber').textContent;
+                const documentCurrency = document.getElementById('documentCurrency').value;
+                const totalAmount = parseFloat(document.getElementById('previewTotal').textContent.split(' ')[0].replace(',', '.'));
+                const companyName = document.getElementById('previewClientName').textContent;
+                
+                const newDoc = {
+                    id: documentId,
+                    type: docType,
+                    companyId: currentCompanyId,
+                    clientId: document.getElementById('previewClientId').textContent.replace('ID: ', ''),
+                    companyName: companyName,
+                    currency: documentCurrency,
+                    total: totalAmount,
+                    status: 'pending',
+                    createdAt: new Date().toISOString()
+                };
+                
+                documents.push(newDoc);
+                const allDocuments = JSON.parse(localStorage.getItem('documents')) || [];
+                allDocuments.push(newDoc);
+                localStorage.setItem('documents', JSON.stringify(allDocuments));
+                loadAllData();
+            });
+        }
+        
+        function resetForm() {
+            document.getElementById('companyName').value = '';
+            document.getElementById('address').value = '';
+            document.getElementById('city').value = '';
+            document.getElementById('country').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('clientCurrency').value = 'EUR';
+            document.getElementById('documentType').value = 'facture';
+            document.getElementById('documentCurrency').value = 'EUR';
+            
+            const container = document.getElementById('itemsContainer');
+            container.innerHTML = `
+                <div class="item-row">
+                    <input type="text" class="form-control" placeholder="Description">
+                    <input type="number" class="form-control" placeholder="Qté" min="1" value="1">
+                    <input type="number" class="form-control" placeholder="Prix unitaire" min="0" step="0.01">
+                    <select class="form-control">
+                        <option value="EUR">€</option>
+                        <option value="USD">$</option>
+                        <option value="XOF">FCFA</option>
+                    </select>
+                    <input type="number" class="form-control" placeholder="TVA (%)" min="0" max="100" value="20">
+                    <input type="number" class="form-control" placeholder="Total" readonly>
+                    <div class="item-actions">
+                        <button class="btn btn-primary" onclick="addItem()">+</button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('previewSection').classList.add('hidden');
+            
+            const firstRow = container.querySelector('.item-row');
+            const quantityInput = firstRow.querySelector('input[type="number"]:nth-child(2)');
+            const priceInput = firstRow.querySelector('input[type="number"]:nth-child(3)');
+            const tvaInput = firstRow.querySelector('input[type="number"]:nth-child(5)');
+            const currencySelect = firstRow.querySelector('select');
+            
+            quantityInput.addEventListener('input', updateRowTotal);
+            priceInput.addEventListener('input', updateRowTotal);
+            tvaInput.addEventListener('input', updateRowTotal);
+            currencySelect.addEventListener('change', function() {
+                updateRowCurrency(this);
+            });
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            init();
+            
+            const container = document.getElementById('itemsContainer');
+            const quantityInput = container.querySelector('input[type="number"]:nth-child(2)');
+            const priceInput = container.querySelector('input[type="number"]:nth-child(3)');
+            const tvaInput = container.querySelector('input[type="number"]:nth-child(5)');
+            const currencySelect = container.querySelector('select');
+            
+            quantityInput.addEventListener('input', updateRowTotal);
+            priceInput.addEventListener('input', updateRowTotal);
+            tvaInput.addEventListener('input', updateRowTotal);
+            currencySelect.addEventListener('change', function() {
+                updateRowCurrency(this);
+            });
+        });
     </script>
 </body>
 </html>
